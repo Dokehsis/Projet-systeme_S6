@@ -23,6 +23,7 @@ void parser(char *c, char **res)
 	char *p;
 	for(i=0; c[i]!='\0'; i++)
 	{
+		/*des qu un espace est rencontre, une nouvelle chaine de caracteres est stockee*/
 		if(c[i] != ' ')
 		{
 			res[k][j] = c[i];
@@ -35,11 +36,13 @@ void parser(char *c, char **res)
 			k++;
 		}
 	}
+	/*remplacement du \n de fin de ligne par un \0 de fin de chaine*/
 	p = strchr(res[k], '\n');
     if (p)
     {
         *p = '\0';
     }
+    /*pointeur NULL de chaine de caractere en fin de tableau, necessaire pour execv()*/
 	for(k = k+1; k<NOMBRE_ARG; k++){res[k] = (char*)NULL;}
 }
 
@@ -54,6 +57,7 @@ void pathParser(char* envPath, char** paths)
 	int i, j=0, k=0;
 	for(i = 0; envPath[i]!='\0'; i++)
 	{
+		/*des que le caractere ':' est rencontre, une nouvelle chaine est stockee*/
 		if(envPath[i] != ':')
 		{
 			paths[k][j++] = envPath[i];
@@ -187,12 +191,12 @@ void myHistory(char** tabCom, int descHist, int lastHistLine)
 	lseek(descHist, 0, SEEK_SET);
 	while((resRead = read(descHist, buf, 1)) > 0)
 	{
-		if(newLine)
+		if(newLine) /*debut d'une nouvelle ligne*/
 		{
 			i++;
-			if(tabCom[1] == NULL)
+			if(tabCom[1] == NULL) /*absence de -n et de n*/
 				printf("%4d ", i);
-			else
+			else /*presence de -n ou de n*/
 			{
 				nbLines = strtol(tabCom[1], (char**)NULL, 10);
 				if(strcmp("-n", tabCom[1]) == 0 && i>lastHistLine)
@@ -203,9 +207,10 @@ void myHistory(char** tabCom, int descHist, int lastHistLine)
 			}
 			newLine = 0;
 		}
-		if(tabCom[1] == NULL)
+		/*en cours de ligne*/
+		if(tabCom[1] == NULL) /*absence de -n et de n*/
 			printf("%c", buf[0]);
-		else
+		else /*presence de -n ou de n*/
 		{
 			if(strcmp("-n", tabCom[1]) == 0 && i>lastHistLine)
 				printf("%c", buf[0]);
@@ -229,13 +234,13 @@ void myCat(char** tabCom)
 	char toRead[TAILLE_COM], buf[1];
 	int numeroter = 0, count = 1, i, desc, resRead, newLine = 1;
 	toRead[0] = 1;
-	for(i=1; tabCom[i] != NULL; i++)
+	for(i=1; tabCom[i] != NULL; i++) /*verification de la presence de -n*/
 	{
 		if(strcmp("-n", tabCom[i]) == 0)
 			numeroter = 1;
 	}
 	
-	if(tabCom[1+numeroter] == NULL)
+	if(tabCom[1+numeroter] == NULL) /*aucun fichier n a ete indique*/
 	{
 		while(toRead[0] != 0)
 		{
@@ -246,7 +251,7 @@ void myCat(char** tabCom)
 			printf("%s", toRead);
 		}
 	}
-	else
+	else /*au moins un fichier a ete indique > affichage de son contenu*/
 	{
 		for(i=1; tabCom[i] != NULL; i++)
 		{
@@ -314,6 +319,7 @@ void myExecn(int n, int descHist, int lastHistLine)
 	int resRead, curLine = 1, i=0;
 	char buf[1], newCommande[TAILLE_COM];
 	lseek(descHist, 0, SEEK_SET);
+	/*recherche de la ligne d indice n*/
 	while(curLine < n && (resRead = read(descHist, buf, 1)) > 0)
 	{
 		if(buf[0] == '\n')
@@ -323,6 +329,7 @@ void myExecn(int n, int descHist, int lastHistLine)
 		printf("!%d: entree inexistante\n", n);
 	else
 	{
+		/*copie de la ligne puis execution de la commande*/
 		while((resRead = read(descHist, buf, 1)) > 0 && buf[0] != '\n')
 			newCommande[i++] = buf[0];
 		newCommande[i] = '\0';
@@ -526,7 +533,7 @@ int execCommande(char *c, int descHist, int lastHistLine)
 			/*Creation du pipe*/
 			pipe(pipefd);
 			pid2 = fork();
-			/*On execute ensuite les 2 nouvelles commande par un appel recursif de execComande().
+			/*On execute ensuite les 2 nouvelles commandes par un appel recursif de execComande().
 			Cela permet de gerer les pipelines.*/
 			if(pid2 == 0)
 			{
